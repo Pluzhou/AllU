@@ -7,4 +7,7 @@ Allu is used for monitoring Windows system memory and display by web
 
 ====
 version: 0.1
+
 start_date: 2014/09/06
+
+Editor    : tangys, rain4wind
