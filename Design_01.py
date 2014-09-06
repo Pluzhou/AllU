@@ -48,3 +48,39 @@ Output:
         3. logging
             script log.
 """
+
+"""
+How to name
+
+class : 
+    MyOwnClass
+    _InnerClass
+
+Exception:
+    MyError
+
+How to import:
+    from Module import class
+
+    Not!!:
+    from Module import *
+
+Function:
+    my_function
+
+variable:
+    my_variable
+    is_my_variable
+
+    Not use for only one alpha:
+    'i'(lowercase), 'l'(lowercase), O'(uppercase)
+
+Constant:
+    PI
+"""
+
+"""
+Most important rule:
+
+HOWTO guide first, then implement.
+"""
