@@ -18,30 +18,43 @@ class ALuIn(object):
     """
     def __init__(self, pcname=None, usr=None, pwd=None):
         print "Hello AllU!"
-        
+             
         if pcname:
             self.pc = wmi.WMI(pcname, user=usr, password=pwd)
         else:
-            self.pc = wmi.WMI() # Monitor Local PC
+            self.pc = wmi.WMI()
 
-    def __get_Caption(self, instance):
-        """get Win32_Process Caption"""
-        return instance.Caption
+        self.process_cache = {}
 
-    def __get_CommandLine(self, instance):
-        """get Win32_Process CommandLine"""
-        return instance.CommandLine
+    def __get_localtimestamp(self):
+        month_dict = {
+                        "Jan":"01", "Feb":"02", "Mar":"03", "Apr":"04",
+                        "May":"05", "Jun":"06", "Jul":"07", "Aug":"08",
+                        "Sep":"09", "Oct":"10", "Nov":"11", "Dec":"12",
+                    }
 
-    def __get_CreationDate(self, instance):
-        """get Win32_Process CreationDate"""
-        return instance.CreationDate
+        current = time.asctime().split(" ")
 
-    def __get_WorkingSetSize(self, instance):
-        """get Win32_Process WorkingSetSize"""
-        return instance.WorkingSetSize
+        timestamp = "%s%s%s_%s"%(current[-1], month_dict[current[1]],
+                                 current[2], current[3].replace(":",""))
+        return timestamp
+
+    def __get_process_info_all(self):
+        wql = "SELECT Caption, CommandLine, CreationDate, WorkingSetSize\
+               FROM Win32_Process"
+        return [process for process in self.pc.query(wql)]
+
+    def info(self):
+        print self.__get_localtimestamp()
+        for process in self.__get_process_info_all():
+            print "Caption: ", process.Caption
+            print "\tCMD:\t", process.CommandLine
+            print "\tDate:\t", process.CreationDate
+            print "\tMemory:\t", process.WorkingSetSize
 
 if __name__ == '__main__':
     import sys
     reload(sys)
     sys.setdefaultencoding('utf-8')
     ALu = ALuIn()
+    ALu.info()
