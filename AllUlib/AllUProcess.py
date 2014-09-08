@@ -16,7 +16,7 @@ class ALuIn(object):
     """docstring for ALuIn
     ALuIn Class get process's info and return data.
     """
-    def __init__(self, pcname=None, usr=None, pwd=None):
+    def __init__(self, pcname=None, usr=None, pwd=None, keyword=None):
         print "Hello AllU!"
              
         if pcname:
@@ -25,6 +25,8 @@ class ALuIn(object):
             self.pc = wmi.WMI()
 
         self.process_cache = {}
+        self.keyword = keyword
+        self.indx = 1
 
     def __get_localtimestamp(self):
         month_dict = {
@@ -40,21 +42,53 @@ class ALuIn(object):
         return timestamp
 
     def __get_process_info_all(self):
-        wql = "SELECT Caption, CommandLine, CreationDate, WorkingSetSize\
+        wql = "SELECT Caption, CommandLine, CreationDate,            \
+                      WorkingSetSize, VirtualSize, PeakWorkingSetSize\
                FROM Win32_Process"
-        return [process for process in self.pc.query(wql)]
+        if self.keyword == None:
+            return [process for process in self.pc.query(wql)]
+        else:
+            return [process for process in self.pc.query(wql)   \
+                     if self.keyword in str(process.CommandLine)\
+                     or self.keyword in str(process.Caption)]
 
-    def info(self):
-        print self.__get_localtimestamp()
-        for process in self.__get_process_info_all():
-            print "Caption: ", process.Caption
-            print "\tCMD:\t", process.CommandLine
-            print "\tDate:\t", process.CreationDate
-            print "\tMemory:\t", process.WorkingSetSize
+    def __process_info_to_dict(self):
+        cur = self.__get_localtimestamp()
+        for p in self.__get_process_info_all():
+            pinfo = (p.Caption, p.CommandLine, p.CreationDate)
+            if self.process_cache.has_key(pinfo):
+                idx = self.process_cache[pinfo]["idx"]
+            else:
+                idx = self.indx
+                self.indx += 1
+            self.process_cache[pinfo] = {
+                cur: (p.WorkingSetSize, p.VirtualSize, p.PeakWorkingSetSize),
+                "idx": idx
+                }
+
+        return self.process_cache, cur
+
+    def get_current_status(self):
+        return self.__process_info_to_dict()
+
+    def stdout_current_status(self):
+        info = self.__process_info_to_dict()
+        for caption, cmd, date in info[0].keys():
+            key = (caption, cmd, date)
+            print "Caption:\t", caption
+            print "\tCMD:\t", cmd
+            print "\tDate:\t", date
+            print "MemoryUsing:"
+            print "\tWorkingSetSize:\t", info[0][key][info[1]][0]
+            print "\tVirtualSize:\t", info[0][key][info[1]][1]
+            print "\tVirtualSize:\t", info[0][key][info[1]][2]
+
+    def fileout_current_status(self):
+        pass
 
 if __name__ == '__main__':
     import sys
     reload(sys)
     sys.setdefaultencoding('utf-8')
-    ALu = ALuIn()
-    ALu.info()
+    ALu = ALuIn(keyword="sublime")
+    print ALu.stdout_current_status()
