@@ -26,6 +26,7 @@ class ALuIn(object):
 
         self.process_cache = {}
         self.keyword = keyword
+        self.cur = self.__get_localtimestamp()
         self.indx = 1
 
     def __get_localtimestamp(self):
@@ -53,7 +54,7 @@ class ALuIn(object):
                      or self.keyword in str(process.Caption)]
 
     def __process_info_to_dict(self):
-        cur = self.__get_localtimestamp()
+        self.cur = self.__get_localtimestamp()
         for p in self.__get_process_info_all():
             pinfo = (p.Caption, p.CommandLine, p.CreationDate)
             if self.process_cache.has_key(pinfo):
@@ -62,33 +63,37 @@ class ALuIn(object):
                 idx = self.indx
                 self.indx += 1
             self.process_cache[pinfo] = {
-                cur: (p.WorkingSetSize, p.VirtualSize, p.PeakWorkingSetSize),
+                self.cur: (p.WorkingSetSize, 
+                           p.VirtualSize, 
+                           p.PeakWorkingSetSize),
                 "idx": idx
                 }
 
-        return self.process_cache, cur
+        return self.process_cache
 
     def get_current_status(self):
         return self.__process_info_to_dict()
 
     def stdout_current_status(self):
         info = self.__process_info_to_dict()
-        for caption, cmd, date in info[0].keys():
+        for caption, cmd, date in info.keys():
             key = (caption, cmd, date)
             print "Caption:\t", caption
             print "\tCMD:\t", cmd
             print "\tDate:\t", date
             print "MemoryUsing:"
-            print "\tWorkingSetSize:\t", info[0][key][info[1]][0]
-            print "\tVirtualSize:\t", info[0][key][info[1]][1]
-            print "\tVirtualSize:\t", info[0][key][info[1]][2]
+            print "\tWorkingSetSize:\t", info[key][self.cur][0]
+            print "\tVirtualSize:\t", info[key][self.cur][1]
+            print "\tVirtualSize:\t", info[key][self.cur][2]
+            print "\tProcess Idx:\t", info[key]["idx"]
 
-    def fileout_current_status(self):
-        pass
+    def fileout_current_status(self, path):
+        with open(path, "w") as f:
+            pass
 
 if __name__ == '__main__':
     import sys
     reload(sys)
     sys.setdefaultencoding('utf-8')
-    ALu = ALuIn(keyword="sublime")
+    ALu = ALuIn()
     print ALu.stdout_current_status()
